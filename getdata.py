@@ -78,10 +78,11 @@ def SimpleStatistics(data, print=True):
             st.write('\tWeekly increase:', round(100 * (ratio - 1), 1), '%')
             st.write('\tDaily increase:', dailypercentchange, '% per day')
             st.write('\tDoubling Time (represents recent growth):', recentdbltime, 'days')
+            return x, y, None
         else:
             params = pd.DataFrame([[current, lastweek, ratio, recentdbltime, dailypercentchange]],
                                   columns=['current', 'lastweek', 'ratio', 'recentdbltime', 'dailypercentchange'])
-    return x, y, params
+            return x, y, params
 
 
 def regressions(x, y):
