@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
-from getdata import getCountryData, getCountryList, regressions, logistic, exponential
+from getdata import getCountryData, getCountryList, regressions, logistic, exponential, SimpleStatistics
 from time import gmtime, strftime
 import plotly.express as px
 import plotly.graph_objects as go
@@ -15,10 +15,10 @@ countryDict = getCountryList()
 def load_data(countryCode):
 
     df = getCountryData(countryCode)
-    #combined_csv['Last Update'] =  pd.to_datetime(combined_csv['Last Update'])
+    df['updated_at_x'] =  pd.to_datetime(df['updated_at_x'])
     return df
 
-st.title('Corona Virus')
+st.title('Corona Virus Track')
 
 country = st.sidebar.selectbox("Enter country", list(countryDict.keys()),)
 st.write("Selected country: ", country)
@@ -31,37 +31,17 @@ data = load_data(countryDict[country])
 data_load_state.text('Loading data...done!')
 
 #mask_countries = data['Country/Region'].isin(countries)
-
+st.ta
 if st.checkbox('Show raw data'):
     st.subheader('Raw data')
-    st.write(data)
+    st.dataframe(data[['name','population','today.deaths', 'today.confirmed', 'date', 'deaths', 'confirmed', 'active', 'recovered']])
 
 st.subheader('Simple Analysis')
 #st.line_chart(data)
 
+x, y, _ = SimpleStatistics(data)
+
 mostrecentdate = data['date'].max()
-currdate = strftime("%Y-%m-%d", gmtime())
-data = data[data['date'] != currdate]
-co = pd.DataFrame(data.sort_values(by=['date']).set_index('date')['confirmed'])
-co.columns = ['Cases']
-co = co.loc[co['Cases'] > 0]
-recentdbltime = float('NaN')
-y = np.array(co['Cases'])
-x = np.arange(y.size)
-if len(y) >= 7:
-    current = y[-1]
-    lastweek = y[-8]
-    if current > lastweek:
-        st.write('** Based on Most Recent Week of Data **')
-        st.write('\tConfirmed cases on', co.index[-1], '\t', current)
-        st.write('\tConfirmed cases on', co.index[-8], '\t', lastweek)
-        ratio = current / lastweek
-        st.write('\tRatio:', round(ratio, 2))
-        st.write('\tWeekly increase:', round(100 * (ratio - 1), 1), '%')
-        dailypercentchange = round(100 * (pow(ratio, 1 / 7) - 1), 1)
-        st.write('\tDaily increase:', dailypercentchange, '% per day')
-        recentdbltime = round(7 * np.log(2) / np.log(ratio), 1)
-        st.write('\tDoubling Time (represents recent growth):', recentdbltime, 'days')
 
 st.subheader('Chart')
 
@@ -81,7 +61,7 @@ if expr2 > 0:
 fig.update_layout(title= country + ' Cumulative COVID-19 Cases. (Updated on '+mostrecentdate+')',
                       xaxis_title='Days',
                       yaxis_title='Total Cases',
-                      font=dict(size=14))
+                      font=dict(size=12))
 
 st.plotly_chart(fig, use_container_width=True)
 

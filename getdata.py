@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 import plotly.express as px
 import plotly.graph_objects as go
 from time import gmtime, strftime
+import streamlit as st
 
 
 base_url = 'http://corona-api.com/countries'
@@ -31,17 +32,20 @@ def getCountryData(countryCode):
     return df_full
 
 
-def getAllData(countryCodeList):
-    for i, countryCode in enumerate(countryCodeList):
-        if i == 0:
-            df = getCountryData(countryCode)
-        else:
-            try:
-                df = pd.concat([df, getCountryData(countryCode)])
-            except:
-                print(f'Not able to get data to {countryCode}')
-    return df
-
+def getAllData(countryListCode):
+    for i, countryName in enumerate(list(countryListCode.keys())):
+        try:
+            df_data = getCountryData(countryListCode[countryName])
+            _,_,df = SimpleStatistics(df_data, False)
+            df['country'] = countryName
+            df['population'] = df_data['population']
+            if i==0:
+                df_static = df
+            else:
+                df_static = pd.concat([df_static, df])
+        except:
+            pass
+    return df_static
 
 def logistic(t, a, b, c, d):
     return c + (d - c)/(1 + a * np.exp(- b * t))
@@ -49,6 +53,35 @@ def logistic(t, a, b, c, d):
 
 def exponential(t, a, b, c):
     return a * np.exp(b * t) + c
+
+def SimpleStatistics(data, print=True):
+
+    currdate = strftime("%Y-%m-%d", gmtime())
+    data = data[data['date'] != currdate]
+    co = pd.DataFrame(data.sort_values(by=['date']).set_index('date')['confirmed'])
+    co.columns = ['Cases']
+    co = co.loc[co['Cases'] > 0]
+    recentdbltime = float('NaN')
+    y = np.array(co['Cases'])
+    x = np.arange(y.size)
+    if len(y) >= 7:
+        current = y[-1]
+        lastweek = y[-8]
+        ratio = current / lastweek
+        recentdbltime = round(7 * np.log(2) / np.log(ratio), 1)
+        dailypercentchange = round(100 * (pow(ratio, 1 / 7) - 1), 1)
+        if print:
+            st.write('** Based on Most Recent Week of Data **')
+            st.write('\tConfirmed cases on', co.index[-1], '\t', current)
+            st.write('\tConfirmed cases on', co.index[-8], '\t', lastweek)
+            st.write('\tRatio:', round(ratio, 2))
+            st.write('\tWeekly increase:', round(100 * (ratio - 1), 1), '%')
+            st.write('\tDaily increase:', dailypercentchange, '% per day')
+            st.write('\tDoubling Time (represents recent growth):', recentdbltime, 'days')
+        else:
+            params = pd.DataFrame([[current, lastweek, ratio, recentdbltime, dailypercentchange]],
+                                  columns=['current', 'lastweek', 'ratio', 'recentdbltime', 'dailypercentchange'])
+    return x, y, params
 
 
 def regressions(x, y):
