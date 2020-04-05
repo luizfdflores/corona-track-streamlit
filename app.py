@@ -31,7 +31,7 @@ data = load_data(countryDict[country])
 data_load_state.text('Loading data...done!')
 
 #mask_countries = data['Country/Region'].isin(countries)
-st.ta
+
 if st.checkbox('Show raw data'):
     st.subheader('Raw data')
     st.dataframe(data[['name','population','today.deaths', 'today.confirmed', 'date', 'deaths', 'confirmed', 'active', 'recovered']])
