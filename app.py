@@ -20,7 +20,7 @@ def load_data(countryCode):
 
 st.title('Corona Virus Track')
 
-country = st.sidebar.selectbox("Enter country", list(countryDict.keys()),)
+country = st.selectbox("Enter country", list(countryDict.keys()),)
 st.write("Selected country: ", country)
 
 # Create a text element and let the reader know the data is loading.
